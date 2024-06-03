@@ -16,8 +16,8 @@ namespace APRSClientLoopSender
 {
     public class APRSClient
     {
-        const string softName = "dkxce APRS CLS";
-        const string softVer = "0.1";
+        private const string softName = "dkxce.APRS.CLS v0.1";
+        private const string softVer = "0.1";
 
         private string callsign = "UNKNOWN";
         private string passw = "-1";

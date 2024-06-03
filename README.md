@@ -23,4 +23,4 @@ Features:
 </XMLConfig>
 ```
 
-<ims src="window.png"/>
+<img src="window.png"/>
