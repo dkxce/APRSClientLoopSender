@@ -1,4 +1,6 @@
 /.vs
+/*.zip
+/*.rar
 /APRSClientLoopSender/obj/Debug
 /APRSClientLoopSender/bin/Debug/APRSClientLoopSender.xml
 /APRSClientLoopSender/bin/Debug/APRSClientLoopSender.exe.config
