@@ -1,0 +1,2 @@
+APRSClientLoopSender /uninstall
+pause

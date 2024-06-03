@@ -1,0 +1,2 @@
+APRSClientLoopSender /install
+pause

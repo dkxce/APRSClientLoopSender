@@ -1,0 +1,2 @@
+APRSClientLoopSender /start
+pause
