@@ -1,0 +1,4 @@
+/.vs
+/APRSClientLoopSender/obj/Debug
+/APRSClientLoopSender/bin/Debug/APRSClientLoopSender.xml
+/APRSClientLoopSender/bin/Debug/*.pdb
