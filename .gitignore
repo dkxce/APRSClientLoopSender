@@ -1,4 +1,7 @@
 /.vs
 /APRSClientLoopSender/obj/Debug
 /APRSClientLoopSender/bin/Debug/APRSClientLoopSender.xml
+/APRSClientLoopSender/bin/Debug/APRSClientLoopSender.exe.config
 /APRSClientLoopSender/bin/Debug/*.pdb
+/APRSClientLoopSender/bin/Debug/log.txt
+/APRSClientLoopSender/bin/Debug/log.txt.lock

@@ -1,4 +1,12 @@
-﻿using System;
+﻿//
+// C#
+// dkxce APRS Client Loop Sender
+// v 0.2, 03.06.2024
+// https://github.com/dkxce/APRSClientLoopSender
+// en,ru,1251,utf-8
+//
+
+using System;
 using System.IO;
 using System.Xml.Serialization;
 

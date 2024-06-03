@@ -1,7 +1,7 @@
 ﻿//
 // C#
 // dkxce APRS Client Loop Sender
-// v 0.1, 03.06.2024
+// v 0.2, 03.06.2024
 // https://github.com/dkxce/APRSClientLoopSender
 // en,ru,1251,utf-8
 //
@@ -14,32 +14,31 @@ using System.Threading;
 
 namespace APRSClientLoopSender
 {
-    public class APRSClient
+    internal class APRSClient
     {
-        private const string softName = "dkxce.APRS.CLS v0.1";
-        private const string softVer = "0.1";
-
-        private string callsign = "UNKNOWN";
-        private string passw = "-1";
-        private string filter = "p/R*/U*";
-
-        private string APRSserver = "rotate.aprs2.ru";
-        private int APRSPort = 14580;
-        private string message_ping_text = "APRS,TCPIP*:>online";
+        public static string softName   { private set; get; } = LoopPROC.ApplicationCaption.Replace("Client Loop Sender","CLS").Replace(" ",".");
+        public static string softVer    { private set; get; } = LoopPROC.ApplicationVersion;
+        public string callsign          { private set; get; } = "UNKNOWN";
+        public string passw             { private set; get; } = "-1";
+        public string filter            { private set; get; } = "p/R/U"; // -> https://aprs-is.net/javAPRSFilter.aspx
+        public string APRSserver        { private set; get; } = "rotate.aprs2.ru"; // -> http://www.aprs2.ru/
+        public int APRSPort             { private set; get; } = 14580; // default 14580, info 14501
+        public string message_ping_text { private set; get; } = "APRS,TCPIP*:>online";
 
         private TcpClient tcp_client = null;
         private Thread tcp_listen = null;
-
         private bool _isRunning = false;
 
-        public APRSClient(string server, int port, string user, string pass, string filter = null, string ping_message = null)
+        internal APRSClient(string server, int port, string user, string pass, string filter = null, string ping_message = null)
         {
             this.APRSserver = server;
             this.APRSPort = port;
             this.callsign = user;
             this.passw = pass;
-            if (!string.IsNullOrEmpty(filter)) this.filter = filter;
-            if (!string.IsNullOrEmpty(ping_message)) this.message_ping_text = ping_message;
+            if (!string.IsNullOrEmpty(filter)) 
+                this.filter = filter;
+            if (!string.IsNullOrEmpty(ping_message)) 
+                this.message_ping_text = ping_message;
         }
 
         #region START/STOP
@@ -62,7 +61,7 @@ namespace APRSClientLoopSender
             }
         }
 
-        public void Start()
+        internal void Start()
         {
             if (_isRunning) return;
             _isRunning = true;
@@ -71,7 +70,7 @@ namespace APRSClientLoopSender
             tcp_listen.Start();
         }
 
-        public void Stop()
+        internal void Stop()
         {
             if (!_isRunning) return;
 
@@ -87,7 +86,7 @@ namespace APRSClientLoopSender
             Console.WriteLine(" Closed");
         }
 
-        public bool Connected
+        internal bool Connected
         {
             get
             {
@@ -146,10 +145,10 @@ namespace APRSClientLoopSender
                     if ((ava = tcp_client.Available) > 0)
                     {
                         int rd = tcp_client.GetStream().Read(data, 0, ava > data.Length ? data.Length : ava);
-                        //string txt = System.Text.Encoding.GetEncoding(1251).GetString(data, 0, rd);
-                        //string[] lines = txt.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                        //foreach (string line in lines)
-                        //    do_incoming(line);
+                        string txt = System.Text.Encoding.GetEncoding(1251).GetString(data, 0, rd);
+                        string[] lines = txt.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (string line in lines)
+                           do_incoming(line);
                     };
                 }
                 catch
@@ -203,7 +202,7 @@ namespace APRSClientLoopSender
             // :_ - wheather report (page 19, 62) [OK]
             // :} - traffic
 
-            Console.WriteLine("{i:tcp:#} " + line);
+            // Console.WriteLine("{i:tcp:#} " + line);
             bool isComment = line.IndexOf("#") == 0;
             if (!isComment)
             {
@@ -213,7 +212,7 @@ namespace APRSClientLoopSender
                 if ((parser.Callsign != "") && (parser.Callsign != "Unknown") && OnPacket != null)
                     OnPacket(line, parser);
                 // IF LOCATION PACKET //
-                if ((parser.PacketType == "Location") || (parser.PacketType == "GPGGA") && OnLocation != null)
+                if (((parser.PacketType == "Location") || (parser.PacketType == "GPGGA")) && OnLocation != null)
                     OnLocation(line, parser);
                 // IF WEATHER PACKET //
                 if (parser.PacketType == "Weather Report" && OnWeather != null)
@@ -221,7 +220,7 @@ namespace APRSClientLoopSender
             };
         }
 
-        public bool SendToServer(string line)
+        internal bool SendToServer(string line)
         {
             if (Connected)
             {
@@ -234,10 +233,10 @@ namespace APRSClientLoopSender
 
         #region OnIncomingPacket
 
-        public delegate void OnPacketEvent(string line, APRSParser data);
-        public OnPacketEvent OnPacket = null;
-        public OnPacketEvent OnWeather = null;
-        public OnPacketEvent OnLocation = null;
+        internal delegate void OnPacketEvent(string line, APRSParser data);
+        internal OnPacketEvent OnPacket = null;
+        internal OnPacketEvent OnWeather = null;
+        internal OnPacketEvent OnLocation = null;
         #endregion
 
         private void SendCommand(string cmd)
@@ -255,7 +254,7 @@ namespace APRSClientLoopSender
         }
 
         #region static
-        public static int CallsignChecksum(string callsign)
+        internal static int CallsignChecksum(string callsign)
         {
             int stophere = callsign.IndexOf("-");
             if (stophere > 0) callsign = callsign.Substring(0, stophere);
@@ -279,7 +278,7 @@ namespace APRSClientLoopSender
         }
 
         // http://www.aprs-is.net/SendOnlyPorts.aspx
-        public static void SendUDP(string host, int port, string data)
+        internal static void SendUDP(string host, int port, string data)
         {
             UdpClient udp = new UdpClient();
             udp.Connect(host, port);
@@ -289,7 +288,7 @@ namespace APRSClientLoopSender
         }
 
         // http://www.aprs-is.net/SendOnlyPorts.aspx
-        public static void SendHTTP(string host, int port, string data)
+        internal static void SendHTTP(string host, int port, string data)
         {
             HttpWebRequest wreq = (HttpWebRequest)WebRequest.Create("http://" + host + ":" + port.ToString());
             wreq.Method = "POST";
@@ -303,7 +302,7 @@ namespace APRSClientLoopSender
             wres.Close();
         }
 
-        public static string SendHTTP(string url)
+        internal static string SendHTTP(string url)
         {
             HttpWebRequest wreq = (HttpWebRequest)WebRequest.Create(url);
             HttpWebResponse wres = (HttpWebResponse)wreq.GetResponse();

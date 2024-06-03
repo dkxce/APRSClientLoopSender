@@ -1,7 +1,7 @@
 ﻿//
 // C#
 // dkxce APRS Client Loop Sender
-// v 0.1, 03.06.2024
+// v 0.2, 03.06.2024
 // https://github.com/dkxce/APRSClientLoopSender
 // en,ru,1251,utf-8
 //
@@ -30,9 +30,11 @@ namespace APRSClientLoopSender
             [XmlAttribute]
             public string pass = "-1";
             [XmlAttribute]
-            public string filter = "p/R*/U*";
+            public string filter = "p/R/U";
             [XmlAttribute]
             public string ping = "APRS,TCPIP*:>online";
+            [XmlAttribute]
+            public bool readIncomingPackets = false;
 
             public class APRSSercerComparer: System.Collections.IComparer
             {
@@ -55,7 +57,7 @@ namespace APRSClientLoopSender
             [XmlAttribute]
             public int intervalSeconds = 90;
             [XmlText]
-            public string commands = "\r\n>I'm a teapot\r\nI'm a teapot\r\n";
+            public string commands = "\r\nSFROM>STO,WIDE1-1,WIDE2-2:Simple Text\r\nSFROM>STO,WIDE1-1,WIDE2-2:>Simple Status\r\nSFROM>STO,WIDE1-1,WIDE2-2::TOALL    :Message. Hello All (I'm a teapot)\r\n";            
 
             [XmlIgnore]
             public List<string> Commands
