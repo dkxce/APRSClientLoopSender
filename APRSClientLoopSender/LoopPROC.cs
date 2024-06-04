@@ -1,7 +1,7 @@
 ﻿//
 // C#
 // dkxce APRS Client Loop Sender
-// v 0.2, 03.06.2024
+// v 0.3, 04.06.2024
 // https://github.com/dkxce/APRSClientLoopSender
 // en,ru,1251,utf-8
 //
@@ -19,45 +19,45 @@ namespace APRSClientLoopSender
     internal class LoopPROC
     {
         internal static string     ApplicationCaption { private set; get; } = "dkxce APRS Client Loop Sender";
-        internal static string     ApplicationVersion { private set; get; } = "0.2";
+        internal static string     ApplicationService { private set; get; } = ApplicationCaption.Replace("Client Loop Sender", "CLS").Replace(" ", ".");
+        internal static string     ApplicationVersion { private set; get; } = "0.3";
         internal static string     ApplicationTitle   { private set; get; } = $"{ApplicationCaption} v{ApplicationVersion.PadRight(6)} ";
         internal static string     ApplicationWebSite { private set; get; } = "https://github.com/dkxce/APRSClientLoopSender";
         internal static XMLConfig  ApplicationConfig  { private set; get; } = null;
         internal static string     AppConfigFile      { private set; get; } = "APRSClientLoopSender.xml";
-        internal static string     ApplicationLogFile { private set; get; } = Path.Combine(XMLSaved<int>.CurrentDirectory(), "log.txt");
+        internal static string     ApplicationLogFile
+        {
+            get 
+            {
+                string dt = DateTime.UtcNow.ToString("yyyyMMdd");
+                string path = Path.Combine(XMLSaved<int>.CurrentDirectory(), @"LOGS\"+$"log_{dt}.txt");
+                try { Directory.CreateDirectory(Path.GetDirectoryName(path)); } catch { };
+                return path;
+            }
+        }
 
         #region INTERNAL METHODS
 
-        internal static void ClearLog()
+        internal static void WriteConsole(string msg, bool withDT = false, ConsoleColor? color = null, ConsoleColor? firstLineColor = null, bool? onlyLog = null)
         {
-            try { if (File.Exists(ApplicationLogFile)) File.Delete(ApplicationLogFile); } catch { };
+            WriteConsole(new string[] { msg }, withDT, color, firstLineColor, onlyLog);
         }
 
-        internal static void WriteConsole(string msg, bool withDT = false, ConsoleColor? color = null, ConsoleColor? firstLineColor = null)
+        internal static void WriteConsole(string[] msg, bool withDT = false, ConsoleColor? color = null, ConsoleColor? firstLineColor = null, bool? onlyLog = null)
         {
-            WriteConsole(new string[] { msg }, withDT, color, firstLineColor);
-        }
-
-        internal static void WriteConsole(string[] msg, bool withDT = false, ConsoleColor? color = null, ConsoleColor? firstLineColor = null)
-        {
-            ConsoleColor cc = Console.ForegroundColor;
-            if(color.HasValue || firstLineColor.HasValue) Console.ForegroundColor = ConsoleColor.White;
-            if (withDT) Console.Write($"{DateTime.Now}: ");            
-            for (int msg_id = 0; msg_id < msg.Length; msg_id++)
+            if (!onlyLog.HasValue || onlyLog == false)
             {
-                if(color.HasValue && ((msg_id == 0 && msg.Length == 1 ) || (msg_id == 1))) Console.ForegroundColor = color.Value;
-                if(firstLineColor.HasValue && msg_id == 0) Console.ForegroundColor = firstLineColor.Value;
-                Console.WriteLine(msg[msg_id]);
+                ConsoleColor cc = Console.ForegroundColor;
+                if (color.HasValue || firstLineColor.HasValue) Console.ForegroundColor = ConsoleColor.White;
+                if (withDT) Console.Write($"{DateTime.Now}: ");
+                for (int msg_id = 0; msg_id < msg.Length; msg_id++)
+                {
+                    if (color.HasValue && ((msg_id == 0 && msg.Length == 1) || (msg_id == 1))) Console.ForegroundColor = color.Value;
+                    if (firstLineColor.HasValue && msg_id == 0) Console.ForegroundColor = firstLineColor.Value;
+                    Console.WriteLine(msg[msg_id]);
+                };
+                if (color.HasValue || firstLineColor.HasValue) Console.ForegroundColor = cc;
             };
-            if (color.HasValue || firstLineColor.HasValue) Console.ForegroundColor = cc;
-
-            try 
-            {
-                string lockFile = Path.Combine(XMLSaved<ArrangeStartingPosition>.CurrentDirectory(), "log.txt.lock");
-                if (!File.Exists(lockFile)) try { File.Delete(ApplicationLogFile); } catch { };
-                File.WriteAllText(lockFile, $"{DateTime.UtcNow}");
-            } 
-            catch { };
 
             try
             {
@@ -92,8 +92,6 @@ namespace APRSClientLoopSender
             };           
             WriteConsole($"\r\nExit code: {code}{txt}");
 
-            try { File.Delete(Path.Combine(XMLSaved<ArrangeStartingPosition>.CurrentDirectory(), "log.txt.lock")); } catch { };
-
             Thread.Sleep(2000);
             Environment.Exit(code);
         }
@@ -119,22 +117,25 @@ namespace APRSClientLoopSender
 
             // Get Config XML Specified by File
             {
-                if (!System.IO.File.Exists(System.IO.Path.Combine(XMLSaved<int>.CurrentDirectory(), AppConfigFile))) XMLConfig.SaveTemplate();
-                foreach (string a in args) if (!a.StartsWith("/")) { try { if (System.IO.File.Exists(a)) AppConfigFile = a; } catch { }; };
+                if (!File.Exists(Path.Combine(XMLSaved<int>.CurrentDirectory(), AppConfigFile))) XMLConfig.SaveTemplate();
+                foreach (string a in args) if (!a.StartsWith("/")) { try { if (File.Exists(a)) AppConfigFile = a; } catch { }; };
             };
 
             // WRITE HEADER
             {
-                WriteConsole("*********************************************\r\n*                                           *");
-                WriteConsole($"*    {ApplicationTitle} *");
-                WriteConsole("*                                           *\r\n*********************************************");
-                WriteConsole("https://github.com/dkxce/APRSClientLoopSender");
-                WriteConsole("");
+                Console.WriteLine("*********************************************\r\n*                                           *");
+                Console.WriteLine($"*    {ApplicationTitle} *");
+                Console.WriteLine($"*             {ApplicationService} {ApplicationVersion.PadRight(14)} * ");
+                Console.WriteLine("*                                           *\r\n*********************************************");
+                Console.WriteLine("https://github.com/dkxce/APRSClientLoopSender");
+                Console.WriteLine("");
             };            
 
             // READ CONFIG
             {
-                WriteConsole(String.Format("Configuration: {0}", System.IO.Path.GetFileName(AppConfigFile)), false, ConsoleColor.Yellow);
+                WriteConsole("******************************************************************************************", true, null, null, true);
+                WriteConsole(String.Format("Launching: {0}", Environment.CommandLine), false, ConsoleColor.Yellow);
+                WriteConsole(String.Format("Configuration: {0}", Path.GetFileName(AppConfigFile)), false, ConsoleColor.Yellow);
                 WriteConsole("");
                 bool error = false;
                 try { ApplicationConfig = XMLConfig.LoadNormal(AppConfigFile); }
@@ -317,6 +318,7 @@ namespace APRSClientLoopSender
 
                             WriteConsole($"Connected to APRS Server {ApplicationConfig.Servers[srv_id].user}@{ApplicationConfig.Servers[srv_id].sever}:{ApplicationConfig.Servers[srv_id].port} with filter `{ApplicationConfig.Servers[srv_id].filter}`", true, ConsoleColor.Magenta);
                             WriteConsole($"APRS-IS Status: http://{ApplicationConfig.Servers[srv_id].sever}:14501/", true, ConsoleColor.Blue);
+                            WriteConsole($"Web Map on: https://aprs-map.info/", true, ConsoleColor.Blue);
                             break;
                         }
                         catch (Exception ex) { WriteConsole($"{ex}", true, ConsoleColor.Red); };

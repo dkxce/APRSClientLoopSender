@@ -1,7 +1,7 @@
 ﻿//
 // C#
 // dkxce APRS Client Loop Sender
-// v 0.2, 03.06.2024
+// v 0.3, 04.06.2024
 // https://github.com/dkxce/APRSClientLoopSender
 // en,ru,1251,utf-8
 //
@@ -16,7 +16,7 @@ namespace APRSClientLoopSender
 {
     internal class APRSClient
     {
-        public static string softName   { private set; get; } = LoopPROC.ApplicationCaption.Replace("Client Loop Sender","CLS").Replace(" ",".");
+        public static string softName   { private set; get; } = LoopPROC.ApplicationService;
         public static string softVer    { private set; get; } = LoopPROC.ApplicationVersion;
         public string callsign          { private set; get; } = "UNKNOWN";
         public string passw             { private set; get; } = "-1";

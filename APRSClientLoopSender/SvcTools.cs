@@ -1,7 +1,7 @@
 ﻿//
 // C#
 // dkxce APRS Client Loop Sender
-// v 0.2, 03.06.2024
+// v 0.3, 04.06.2024
 // https://github.com/dkxce/APRSClientLoopSender
 // en,ru,1251,utf-8
 //
@@ -105,7 +105,7 @@ namespace APRSClientLoopSender
 
         private static void InstallReg()
         {
-            string fullpath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "svc_info.reg");
+            string fullpath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "svc_info.reg");
             try
             {
                 string exeName = getValidExeName.Replace("\\", "\\\\");

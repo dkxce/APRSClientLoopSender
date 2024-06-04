@@ -1,12 +1,11 @@
 ﻿//
 // C#
 // dkxce APRS Client Loop Sender
-// v 0.2, 03.06.2024
+// v 0.3, 04.06.2024
 // https://github.com/dkxce/APRSClientLoopSender
 // en,ru,1251,utf-8
 //
 
-using System;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -23,8 +22,8 @@ namespace System.Xml
         public static void Save(string file, T obj)
         {
             XmlSerializerNamespaces ns = new XmlSerializerNamespaces(); ns.Add("", "");
-            System.Xml.Serialization.XmlSerializer xs = new System.Xml.Serialization.XmlSerializer(typeof(T));
-            System.IO.StreamWriter writer = System.IO.File.CreateText(file);
+            XmlSerializer xs = new XmlSerializer(typeof(T));
+            StreamWriter writer = File.CreateText(file);
             xs.Serialize(writer, obj, ns);
             writer.Flush();
             writer.Close();
@@ -32,22 +31,22 @@ namespace System.Xml
 
         public static void SaveHere(string file, T obj)
         {
-            Save(System.IO.Path.Combine(CurrentDirectory(), file), obj);
+            Save(Path.Combine(CurrentDirectory(), file), obj);
         }
 
         public static string Save(T obj)
         {
             XmlSerializerNamespaces ns = new XmlSerializerNamespaces(); ns.Add("", "");
-            System.Xml.Serialization.XmlSerializer xs = new System.Xml.Serialization.XmlSerializer(typeof(T));
-            System.IO.MemoryStream ms = new MemoryStream();
-            System.IO.StreamWriter writer = new StreamWriter(ms);
+            XmlSerializer xs = new XmlSerializer(typeof(T));
+            MemoryStream ms = new MemoryStream();
+            StreamWriter writer = new StreamWriter(ms);
             xs.Serialize(writer, obj, ns);
             writer.Flush();
             ms.Position = 0;
             byte[] bb = new byte[ms.Length];
             ms.Read(bb, 0, bb.Length);
             writer.Close();
-            return System.Text.Encoding.UTF8.GetString(bb); ;
+            return Text.Encoding.UTF8.GetString(bb); ;
         }
 
         /// <summary>
@@ -59,8 +58,8 @@ namespace System.Xml
         {
             try
             {
-                System.Xml.Serialization.XmlSerializer xs = new System.Xml.Serialization.XmlSerializer(typeof(T));
-                System.IO.StreamReader reader = System.IO.File.OpenText(file);
+                XmlSerializer xs = new XmlSerializer(typeof(T));
+                StreamReader reader = File.OpenText(file);
                 T c = (T)xs.Deserialize(reader);
                 reader.Close();
                 return c;
@@ -68,14 +67,14 @@ namespace System.Xml
             catch { };
             {
                 Type type = typeof(T);
-                System.Reflection.ConstructorInfo c = type.GetConstructor(new Type[0]);
+                Reflection.ConstructorInfo c = type.GetConstructor(new Type[0]);
                 return (T)c.Invoke(null);
             };
         }
 
         public static T LoadHere(string file)
         {
-            return Load(System.IO.Path.Combine(CurrentDirectory(), file));
+            return Load(Path.Combine(CurrentDirectory(), file));
         }
 
         public static T Load()
@@ -83,7 +82,7 @@ namespace System.Xml
             try { return Load(CurrentDirectory() + @"\config.xml"); }
             catch { };
             Type type = typeof(T);
-            System.Reflection.ConstructorInfo c = type.GetConstructor(new Type[0]);
+            Reflection.ConstructorInfo c = type.GetConstructor(new Type[0]);
             return (T)c.Invoke(null);
         }
 
@@ -91,11 +90,11 @@ namespace System.Xml
         {
             return AppDomain.CurrentDomain.BaseDirectory;
             // return Application.StartupPath;
-            // return System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            // return System.IO.Directory.GetCurrentDirectory();
+            // return Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            // return Directory.GetCurrentDirectory();
             // return Environment.CurrentDirectory;
-            // return System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
-            // return System.IO.Path.GetDirectory(Application.ExecutablePath);
+            // return Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
+            // return Path.GetDirectory(Application.ExecutablePath);
         }
     }
 }

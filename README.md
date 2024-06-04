@@ -1,4 +1,4 @@
-# APRSClientLoopSender
+# APRSClientLoopSender (dkxce.APRS.CLS)
 
 Simple Beacon APRS Sender. Looped send any APRS data to any APRS-IS servers.     
 
@@ -7,6 +7,9 @@ Features:
 - Allow Multiple Tasks
 - Task Sheduler
 - Config via XML
+- Console mode
+- Run as Service
+- Log File
 
 ```
 <?xml version="1.0" encoding="utf-8"?>
