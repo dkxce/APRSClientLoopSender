@@ -1,7 +1,7 @@
 ﻿//
 // C#
 // dkxce APRS Client Loop Sender
-// v 0.3, 04.06.2024
+// v 0.4, 05.06.2024
 // https://github.com/dkxce/APRSClientLoopSender
 // en,ru,1251,utf-8
 //
@@ -47,6 +47,8 @@ namespace APRSClientLoopSender
             [XmlAttribute]
             public bool on = false;
             [XmlAttribute]
+            public int id = 0;
+            [XmlAttribute]
             public string fromTime = "00:00:00";
             [XmlAttribute]
             public string tillTime = "23:59:59";
@@ -76,10 +78,36 @@ namespace APRSClientLoopSender
             }
         }
 
+        public class APRSTrack
+        {
+            [XmlAttribute]
+            public bool on = false;
+            [XmlAttribute]
+            public int id = 0;
+            [XmlAttribute]
+            public int loopNext = -1; // Next ID
+            [XmlAttribute]
+            public int nextDelay = 4000; // in seconds
+            [XmlAttribute]
+            public int speedDeviation = 2; // KMPH
+            [XmlAttribute]
+            public string fromTime = "00:00:00";
+            [XmlAttribute]
+            public string tillTime = "23:59:59";
+            [XmlAttribute]
+            public DateTime fromDate = DateTime.Today;
+            [XmlAttribute]
+            public DateTime tillDate = DateTime.Today.AddYears(10);
+            [XmlAttribute]
+            public string file = ""; // Relative Path
+        }
+
         [XmlArray("servers"), XmlArrayItem("server")]
-        public APRSServer[] Servers;
+        public APRSServer[] Servers = new APRSServer[0];
         [XmlArray("tasks"), XmlArrayItem("task")]
-        public APRSTask[] Tasks;       
+        public APRSTask[] Tasks = new APRSTask[0];
+        [XmlArray("tracks"), XmlArrayItem("track")]
+        public APRSTrack[] Tracks = new APRSTrack[0];
 
         public static XMLConfig LoadNormal(string file = null)
         {
@@ -91,6 +119,9 @@ namespace APRSClientLoopSender
             List<APRSTask> tsks = new List<APRSTask>(res.Tasks);
             for (int i = tsks.Count - 1; i >= 0; i--) if (!tsks[i].on) tsks.RemoveAt(i);
             res.Tasks = tsks.ToArray();
+            List<APRSTrack> trks = new List<APRSTrack>(res.Tracks);
+            for (int i = trks.Count - 1; i >= 0; i--) if (!trks[i].on && !string.IsNullOrEmpty(trks[i].file)) trks.RemoveAt(i);
+            res.Tracks = trks.ToArray();
             return res;
         }
 
@@ -104,6 +135,7 @@ namespace APRSClientLoopSender
             XMLConfig xc = new XMLConfig();
             xc.Servers = new APRSServer[] { new APRSServer() };
             xc.Tasks = new APRSTask[] { new APRSTask() };
+            xc.Tracks = new APRSTrack[] { new APRSTrack() };
             xc.Save();
         }
     }

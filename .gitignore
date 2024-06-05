@@ -10,3 +10,6 @@
 /APRSClientLoopSender/bin/Debug/APRSClientLoopSender.rar
 /APRSClientLoopSender/bin/Debug/APRSClientLoopSender.zip
 /APRSClientLoopSender/bin/Debug/LOGS
+/APRSClientLoopSender/bin/Debug/*.trk
+/APRSClientLoopSender/bin/Debug/TRACKS/*.csv
+/APRSClientLoopSender/bin/Debug/TRACKS/*.kml

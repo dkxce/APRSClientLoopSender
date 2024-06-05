@@ -1,26 +1,27 @@
 ﻿//
 // C#
 // dkxce APRS Client Loop Sender
-// v 0.3, 04.06.2024
+// v 0.4, 05.06.2024
 // https://github.com/dkxce/APRSClientLoopSender
 // en,ru,1251,utf-8
 //
 
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Xml;
 using System.Windows.Forms;
 using System.ServiceProcess;
-using System.IO;
 
 namespace APRSClientLoopSender
 {
     internal class LoopPROC
     {
+        #region Application Main
+
         internal static string     ApplicationCaption { private set; get; } = "dkxce APRS Client Loop Sender";
         internal static string     ApplicationService { private set; get; } = ApplicationCaption.Replace("Client Loop Sender", "CLS").Replace(" ", ".");
-        internal static string     ApplicationVersion { private set; get; } = "0.3";
+        internal static string     ApplicationVersion { private set; get; } = "0.4";
         internal static string     ApplicationTitle   { private set; get; } = $"{ApplicationCaption} v{ApplicationVersion.PadRight(6)} ";
         internal static string     ApplicationWebSite { private set; get; } = "https://github.com/dkxce/APRSClientLoopSender";
         internal static XMLConfig  ApplicationConfig  { private set; get; } = null;
@@ -35,6 +36,8 @@ namespace APRSClientLoopSender
                 return path;
             }
         }
+
+        #endregion Application Main
 
         #region INTERNAL METHODS
 
@@ -138,10 +141,13 @@ namespace APRSClientLoopSender
                 WriteConsole(String.Format("Configuration: {0}", Path.GetFileName(AppConfigFile)), false, ConsoleColor.Yellow);
                 WriteConsole("");
                 bool error = false;
-                try { ApplicationConfig = XMLConfig.LoadNormal(AppConfigFile); }
+                try 
+                { 
+                    ApplicationConfig = XMLConfig.LoadNormal(AppConfigFile); 
+                }
                 catch (Exception ex)
                 {
-                    WriteConsole($"No Config Specified!\r\n{ex}", false, ConsoleColor.Red); error = true;
+                    WriteConsole($"Bad configuration:\r\n{ex}", false, ConsoleColor.Red); error = true;
                 };
                 if (ApplicationConfig.Servers == null || ApplicationConfig.Servers.Length == 0)
                 {
@@ -149,7 +155,7 @@ namespace APRSClientLoopSender
                 };
                 if (ApplicationConfig.Tasks == null || ApplicationConfig.Tasks.Length == 0)
                 {
-                    WriteConsole("No Tasks Specified!", false, ConsoleColor.Red); error = true;
+                    //WriteConsole("No Tasks Specified!", false, ConsoleColor.Red); error = true;
                 };
                 if (error) { LoopPROC.Exit(1); };
             };
@@ -171,7 +177,7 @@ namespace APRSClientLoopSender
             };
             // EXIT SENDER
             WriteConsole("Stopped", true, ConsoleColor.Cyan);
-            LoopPROC.Exit(0);
+            Exit(0);
             return 0;
         }
 
@@ -217,205 +223,7 @@ namespace APRSClientLoopSender
         }
 
         #endregion PRIVATE METHODS
-
-        #region LOOP RUNNER
-
-        private class LoopRUNNER : ServiceBase
-        {
-            #region PRIVATES
-            private APRSClient client           = null;
-            private Thread     main             = null;
-            private int        serverIndex      =   -1;
-            private static string[] cmdLineArgs = null;
-            private static int loopInterval     = 2500;
-            private Dictionary<int, (DateTime, int)> taskPasses = new Dictionary<int, (DateTime, int)>();
-            #endregion PRIVATES
-
-            #region Public Params
-
-            public ulong incmPcktCtr { private set; get; } = 0;
-            public ulong otgnPcktCtr { private set; get; } = 0;            
-            public static bool running { private set; get; } = false;
-
-            #endregion Public Params
-
-            #region Constructor
-
-            public LoopRUNNER() { }
-            public LoopRUNNER(string[] args) => cmdLineArgs = args == null ? cmdLineArgs : args;
-
-            #endregion Constructor
-
-            #region Start/Stop
-
-            protected override void OnStart(string[] args) => 
-                Start(args);
-            internal void Start(string[] args) { running = true; (main = new Thread(LoopThread)).Start(); }
-            protected override void OnStop() => 
-                Stop();
-            internal void Stop() { running = false; main.Join(); }
-
-            #endregion Start/Stop
-
-            #region Check Valid APRS Message
-
-            private bool IsValidAPRSMessage(string message)
-            {
-                APRSParser parser = new APRSParser();
-                parser.Parse(message);
-                return !string.IsNullOrEmpty(parser.Callsign);
-            }
-
-            #endregion Check Valid APRS Message
-
-            #region LOOPER
-
-            private void LoopThread()
-            {
-                while (running)
-                {
-                    try { LoopStep(); }
-                    catch (Exception ex) { WriteConsole($"{ex}", true, ConsoleColor.Red); };
-                    Thread.Sleep(loopInterval);
-                };
-                Unloop();
-            }
-
-            public void LoopStep()
-            {
-                DateTime lastStatusLoop = DateTime.UtcNow;
-                // LOOP THROUOUT SERVER, CONNECT, RECONNECT
-                if (client == null)
-                {
-                    for (int srv_id = 0; srv_id < ApplicationConfig.Servers.Length; srv_id++)
-                    {
-                        try
-                        {
-                            serverIndex = srv_id;
-
-                            client = new APRSClient(ApplicationConfig.Servers[srv_id].sever, ApplicationConfig.Servers[srv_id].port, ApplicationConfig.Servers[srv_id].user, ApplicationConfig.Servers[srv_id].pass, ApplicationConfig.Servers[srv_id].filter, ApplicationConfig.Servers[srv_id].ping);
-                            if (ApplicationConfig.Servers[srv_id].readIncomingPackets)
-                            {
-                                client.OnPacket = (string l, APRSParser d) =>
-                                {
-                                    incmPcktCtr++;
-                                    WriteConsole(new string[] { $"Incoming packet from {ApplicationConfig.Servers[serverIndex].sever}:", l }, true, ConsoleColor.Gray);
-                                };
-                                client.OnLocation = (string l, APRSParser d) => WriteConsole(new string[] { $"Incoming location from {ApplicationConfig.Servers[serverIndex].sever}:", l }, true, ConsoleColor.Gray);
-                                client.OnWeather = (string l, APRSParser d) => WriteConsole(new string[] { $"Incoming weather from {ApplicationConfig.Servers[serverIndex].sever}:", l }, true, ConsoleColor.Gray);
-                            }
-                            else client.OnPacket = (string l, APRSParser d) => incmPcktCtr++;
-
-                            client.Start();
-                            Thread.Sleep(5000);
-
-                            if (!client.Running || !client.Connected)
-                            {
-                                client.Stop();
-                                client = null;
-                                continue;
-                            };
-
-                            WriteConsole($"Connected to APRS Server {ApplicationConfig.Servers[srv_id].user}@{ApplicationConfig.Servers[srv_id].sever}:{ApplicationConfig.Servers[srv_id].port} with filter `{ApplicationConfig.Servers[srv_id].filter}`", true, ConsoleColor.Magenta);
-                            WriteConsole($"APRS-IS Status: http://{ApplicationConfig.Servers[srv_id].sever}:14501/", true, ConsoleColor.Blue);
-                            WriteConsole($"Web Map on: https://aprs-map.info/", true, ConsoleColor.Blue);
-                            break;
-                        }
-                        catch (Exception ex) { WriteConsole($"{ex}", true, ConsoleColor.Red); };
-                        client = null;
-                    };
-                };
-
-                // CHECK CONNECTED
-                if (client != null && !client.Connected) client = null;
-
-                // LOOP THROUOUT TASKS AND MESSAGES
-                if (client != null && client.Connected)
-                {
-                    for (int task_id = 0; task_id < ApplicationConfig.Tasks.Length; task_id++)
-                    {
-                        if (ApplicationConfig.Tasks[task_id].fromDate > DateTime.Now) continue;
-                        if (ApplicationConfig.Tasks[task_id].tillDate < DateTime.Now) continue;
-
-                        if (DateTime.TryParse(ApplicationConfig.Tasks[task_id].fromTime, out DateTime tf) && DateTime.TryParse(ApplicationConfig.Tasks[task_id].tillTime, out DateTime tt))
-                        {
-                            if (ApplicationConfig.Tasks[task_id].fromDate > tf) continue;
-                            if (ApplicationConfig.Tasks[task_id].tillDate < tt) continue;
-
-                            int msg_line = 0;
-                            if (taskPasses.ContainsKey(task_id))
-                            {
-                                if ((DateTime.UtcNow - taskPasses[task_id].Item1).TotalSeconds < ApplicationConfig.Tasks[task_id].intervalSeconds) continue;
-                                msg_line = taskPasses[task_id].Item2 + 1;
-                            };
-                            if (msg_line >= ApplicationConfig.Tasks[task_id].Commands.Count) msg_line = 0;
-
-                            string cmd = ApplicationConfig.Tasks[task_id].Commands[msg_line];
-                            try
-                            {
-                                if (!IsValidAPRSMessage(cmd))
-                                {
-                                    WriteConsole($"Invalid cmd task {task_id + 1}/{ApplicationConfig.Tasks.Length} cmd {msg_line + 1}/{ApplicationConfig.Tasks[task_id].Commands.Count}: {cmd}", true, ConsoleColor.Red);
-                                    if (taskPasses.ContainsKey(task_id))
-                                        taskPasses[task_id] = (DateTime.MinValue, msg_line);
-                                    else
-                                        taskPasses.Add(task_id, (DateTime.MinValue, msg_line));
-                                    break;
-                                };
-                                if (client.SendToServer(cmd))
-                                {
-                                    otgnPcktCtr++;
-                                    WriteConsole(new string[] { $"Send to {ApplicationConfig.Servers[serverIndex].sever} task {task_id + 1}/{ApplicationConfig.Tasks.Length} cmd {msg_line + 1}/{ApplicationConfig.Tasks[task_id].Commands.Count} next in {ApplicationConfig.Tasks[task_id].intervalSeconds}s:", cmd }, true, ConsoleColor.Green, ConsoleColor.Yellow);
-                                }
-                                else
-                                    continue;
-                            }
-                            catch (Exception ex)
-                            {
-                                WriteConsole($"{ex}", true, ConsoleColor.Red);
-                                client.Stop();
-                                client = null;
-                                break;
-                            };
-
-                            if (taskPasses.ContainsKey(task_id))
-                                taskPasses[task_id] = (DateTime.UtcNow, msg_line);
-                            else
-                                taskPasses.Add(task_id, (DateTime.UtcNow, msg_line));
-                            break;
-                        };
-                    };
-                };
-
-                if (Environment.UserInteractive) Console.Title = $"{ApplicationTitle.Trim()} - i{incmPcktCtr}/o{otgnPcktCtr}";
-                if ((DateTime.UtcNow - lastStatusLoop).TotalMinutes >= 5)
-                {
-                    lastStatusLoop = DateTime.UtcNow;
-                    WriteConsole($"{incmPcktCtr} packets received from {ApplicationConfig.Servers[serverIndex].sever}", true, ConsoleColor.Gray);
-                    WriteConsole($"{otgnPcktCtr} packets send to {ApplicationConfig.Servers[serverIndex].sever}", true, ConsoleColor.Gray);
-                };
-            }
-                        
-            public void Unloop()
-            {
-                if (client != null)
-                {
-                    try { client.Stop(); } catch { };
-                    client = null;
-                    try
-                    {
-                        if (serverIndex >= 0)
-                            WriteConsole($"Disconnected from APRS Server {ApplicationConfig.Servers[serverIndex].sever}", true, ConsoleColor.Magenta);
-                    }
-                    catch { };
-                }
-            }
-
-            #endregion LOOPER
-        }
-
-        #endregion LOOP RUNNER
-
+        
         #region CATCH EXCEPTIONS
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {

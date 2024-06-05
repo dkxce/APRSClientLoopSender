@@ -50,8 +50,12 @@
   <ItemGroup>
     <Compile Include="APRSClient.cs" />
     <Compile Include="APRSParser.cs" />
+    <Compile Include="GeoUtils.cs" />
+    <Compile Include="LoopRunner.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="SvcTools.cs" />
-    <Compile Include="Config.cs" />
+    <Compile Include="XMLConfig.cs" />
     <Compile Include="LoopPROC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XMLSaved.cs" />
