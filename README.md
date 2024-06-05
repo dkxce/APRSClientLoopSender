@@ -3,16 +3,16 @@
 Simple Beacon APRS Sender. Looped send any APRS data to any APRS-IS servers.     
 
 Features:   
-- Allow Multiple Servers <servers!>
-- Allow Multiple Messages <task[]!>
+- Allow Multiple APRS-IS Servers <servers!>
+- Allow Multiple APRS Messages per Task<task[]!>
 - Allow Multiple Tasks <tasks!>
 - Allow Follow Track(s) <tracks!>
 - Task Sheduler
 - Config via XML
 - Console mode
 - Run as Service
-- Log File
-- Save Track Follow Information on restart
+- Log File (per Day)
+- Save Track Follow Information on restart (file: APRSClientLoopSender.trk)
 
 ```
 <?xml version="1.0" encoding="utf-8"?>
