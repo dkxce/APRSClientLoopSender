@@ -33,4 +33,5 @@ Features:
 </XMLConfig>
 ```
 
-<img src="window.png"/>
+<img src="window.png"/>       
+<img src="stats.png"/>       
