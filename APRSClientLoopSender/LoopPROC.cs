@@ -21,7 +21,7 @@ namespace APRSClientLoopSender
 
         internal static string     ApplicationCaption { private set; get; } = "dkxce APRS Client Loop Sender";
         internal static string     ApplicationService { private set; get; } = ApplicationCaption.Replace("Client Loop Sender", "CLS").Replace(" ", ".");
-        internal static string     ApplicationVersion { private set; get; } = "0.4";
+        internal static string     ApplicationVersion { private set; get; } = "0.5";
         internal static string     ApplicationTitle   { private set; get; } = $"{ApplicationCaption} v{ApplicationVersion.PadRight(6)} ";
         internal static string     ApplicationWebSite { private set; get; } = "https://github.com/dkxce/APRSClientLoopSender";
         internal static XMLConfig  ApplicationConfig  { private set; get; } = null;

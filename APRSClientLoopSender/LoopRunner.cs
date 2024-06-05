@@ -378,6 +378,7 @@ namespace APRSClientLoopSender
                 {
                     if (IsValidAPRSMessage(cmd) && client.SendToServer(cmd))
                     {
+                        outgoingPacketCounter++;
                         if (trackLoopInfo.point == trackLoopInfo.points.Count)
                             LoopPROC.WriteConsole(new string[] { $"Send Track to {LoopPROC.ApplicationConfig.Servers[serverIndex].sever} t{trackLoopInfo.track.id}p{trackLoopInfo.point}/{trackLoopInfo.points.Count}, no next:", cmd }, true, ConsoleColor.Green, ConsoleColor.Yellow);
                         else
